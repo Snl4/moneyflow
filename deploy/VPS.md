@@ -136,6 +136,10 @@ sudo certbot --nginx -d moneyflow.vladdev.pp.ua
 
 У Cloudflare: **SSL/TLS → Full (strict)** після certbot.
 
+### Cloudflare **526** — «Invalid SSL certificate»
+
+З’являється в режимі **Full (strict)**, якщо на VPS **немає валідного** сертифіката для `moneyflow.vladdev.pp.ua` (не встановлено certbot, прострочено, не той домен). **Виправлення:** випустити Let's Encrypt на сервері (`certbot --nginx -d moneyflow.vladdev.pp.ua`) і перезавантажити nginx. Тимчасово для діагностики можна поставити **SSL/TLS → Full** (без strict), але для продакшену залишай **Full (strict)** після валідного сертифіката на origin.
+
 ## 5. Telegram Bot
 
 1. [@BotFather](https://t.me/BotFather) → **Menu Button** / **Mini App**.
