@@ -44,9 +44,9 @@ crontab -e
 
 Глобальний демон (`sudo npm i -g pm2`) і **`npx pm2`** з проєкту мали різні версії (5.x vs 6.x). Скрипт **`deploy/vps-npm.sh`** тепер викликає **`pm2` з PATH**, якщо він є (зазвичай глобальний 6.x), інакше — `npx pm2`. Рекомендація на VPS: `sudo npm i -g pm2@latest`, потім **`pm2 save`**. Команди деплою — **`pm2`**, не `npx pm2 save` окремо, якщо вже стоїть глобальний.
 
-### Nginx: `conflicting server name "moneyflow..."`
+### Nginx: `conflicting server name "moneyflow..."` / на піддомені **не MoneyFlow**
 
-Якщо certbot прив’язав сертифікат до **`portfolioweb`**, а ти ще додав окремий файл **`moneyflow.vladdev.pp.ua`** — буде **два** `server_name` для одного домену; nginx ігнорує дубль. Залиш **один** варіант: або прибери `server { ... moneyflow... }` з `portfolioweb`, або видали симлінк окремого сайту в `sites-enabled`. Перевірка: `sudo grep -r moneyflow /etc/nginx/`.
+Якщо certbot прив’язав сертифікат до **`portfolioweb`**, а ти ще додав окремий файл **`moneyflow.vladdev.pp.ua`** — буде **два** `server_name`; nginx лишає **перший** блок — часто там **`proxy_pass` на портфоліо (3000)**, а не на MoneyFlow (**3001**). Детально: [NGINX-SUBDOMAIN-FIX.md](NGINX-SUBDOMAIN-FIX.md). Швидка перевірка: `sudo grep -rn moneyflow /etc/nginx/` і переконайся, що для moneyflow скрізь **`proxy_pass http://127.0.0.1:3001`**.
 
 ---
 
