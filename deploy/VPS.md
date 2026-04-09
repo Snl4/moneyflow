@@ -14,7 +14,31 @@ chmod +x deploy/vps-npm.sh
 ./deploy/vps-npm.sh --nginx
 ```
 
-Оновлення після `git push`: `./deploy/vps-npm.sh update` (або з `--nginx`). Деталі в коментарях у `deploy/vps-npm.sh`.
+### Оновлення з Git (що вже є в скрипті)
+
+Команда **`./deploy/vps-npm.sh update`** (з SSH на VPS) робить по черзі:
+
+1. **`git pull`** — підтягує останній код з `origin` (якщо є папка `.git`);
+2. **`npm ci`** → **`npm run build`**;
+3. перезапуск **PM2** (`moneyflow`).
+
+Тобто після **`git push`** з ПК на сервері достатньо один раз виконати **`./deploy/vps-npm.sh update`**. Це **не** «само по собі» у фоні — потрібен ручний запуск або cron (нижче).
+
+### Опційно: автоматично по розкладу (cron)
+
+Якщо хочеш, щоб сервер сам підтягував з Git (наприклад, раз на добу):
+
+```bash
+crontab -e
+```
+
+Додай рядок (підстав свій шлях; для Node з **nvm** краще обгортка з `bash -l -c`):
+
+```cron
+15 4 * * * cd /var/www/moneyflow && ./deploy/vps-npm.sh update >> /var/log/moneyflow-deploy.log 2>&1
+```
+
+Переконайся, що в cron є **`git`** і **`node`/`npm`** у `PATH` (у системному cron інколи потрібно вказати повний шлях до `node` або додати `PATH=...` у початок crontab).
 
 ---
 

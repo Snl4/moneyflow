@@ -5,7 +5,7 @@
 #   cp .env.example .env && nano .env
 #   ./deploy/vps-npm.sh              # перший запуск: ci, build, pm2
 #   ./deploy/vps-npm.sh --nginx      # те саме + копіювання nginx (sudo)
-#   ./deploy/vps-npm.sh update       # git pull + ci + build + pm2 restart
+#   ./deploy/vps-npm.sh update       # git pull → npm ci → build → pm2 (оновлення з origin)
 #   ./deploy/vps-npm.sh update --nginx
 set -euo pipefail
 
