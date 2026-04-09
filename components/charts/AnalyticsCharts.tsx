@@ -23,14 +23,18 @@ import { useChartTheme } from "@/hooks/useChartTheme";
 export function IncomeExpenseChart({
   data,
   currency,
-  hasAnyMovement,
+  hasAnyMovement: hasMovementProp,
 }: {
   data: { date: string; income: number; expense: number }[];
   currency: CurrencyCode;
-  /** false — усі дні 0, показуємо «порожню» вісь */
-  hasAnyMovement: boolean;
+  /** Якщо не передано — визначається з data (дохід або витрата > 0 хоча б один день) */
+  hasAnyMovement?: boolean;
 }) {
   const ct = useChartTheme();
+  const hasAnyMovement =
+    hasMovementProp !== undefined
+      ? hasMovementProp
+      : data.some((d) => d.income > 0 || d.expense > 0);
   const chartData = data.map((d) => ({
     ...d,
     label: format(new Date(d.date + "T12:00:00"), "d MMM", { locale: uk }),
@@ -122,13 +126,15 @@ export function IncomeExpenseChart({
 export function CategoryPie({
   data,
   currency,
-  hasData,
+  hasData: hasDataProp,
 }: {
   data: { name: string; value: number; color: string }[];
   currency: CurrencyCode;
-  hasData: boolean;
+  /** Якщо не передано — true, коли data не порожній */
+  hasData?: boolean;
 }) {
   const ct = useChartTheme();
+  const hasData = hasDataProp !== undefined ? hasDataProp : data.length > 0;
 
   return (
     <div className="relative h-64 w-full">
@@ -184,13 +190,14 @@ export function CategoryPie({
 export function CategoryBarChart({
   data,
   currency,
-  hasData,
+  hasData: hasDataProp,
 }: {
   data: { name: string; value: number; color: string }[];
   currency: CurrencyCode;
-  hasData: boolean;
+  hasData?: boolean;
 }) {
   const ct = useChartTheme();
+  const hasData = hasDataProp !== undefined ? hasDataProp : data.length > 0;
   const rows = [...data].reverse();
 
   return (
