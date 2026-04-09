@@ -9,7 +9,7 @@ cd /var/www/moneyflow
 cp .env.example .env
 nano .env   # NEXT_PUBLIC_APP_URL=https://moneyflow.vladdev.pp.ua
 chmod +x deploy/vps-npm.sh
-./deploy/vps-npm.sh           # npm ci, build, PM2 на 127.0.0.1:3001
+./deploy/vps-npm.sh           # npm ci, build, PM2 на 127.0.0.1:3010
 # опційно одразу nginx (потрібен sudo):
 ./deploy/vps-npm.sh --nginx
 ```
@@ -46,7 +46,7 @@ crontab -e
 
 ### Nginx: `conflicting server name "moneyflow..."` / на піддомені **не MoneyFlow**
 
-Якщо certbot прив’язав сертифікат до **`portfolioweb`**, а ти ще додав окремий файл **`moneyflow.vladdev.pp.ua`** — буде **два** `server_name`; nginx лишає **перший** блок — часто там **`proxy_pass` на портфоліо (3000)**, а не на MoneyFlow (**3001**). Детально: [NGINX-SUBDOMAIN-FIX.md](NGINX-SUBDOMAIN-FIX.md). Швидка перевірка: `sudo grep -rn moneyflow /etc/nginx/` і переконайся, що для moneyflow скрізь **`proxy_pass http://127.0.0.1:3001`**.
+Якщо certbot прив’язав сертифікат до **`portfolioweb`**, а ти ще додав окремий файл **`moneyflow.vladdev.pp.ua`** — буде **два** `server_name`; nginx лишає **перший** блок — часто там **`proxy_pass` на портфоліо (3000)**, а не на MoneyFlow (**3010**). Детально: [NGINX-SUBDOMAIN-FIX.md](NGINX-SUBDOMAIN-FIX.md). Швидка перевірка: `sudo grep -rn moneyflow /etc/nginx/` і переконайся, що для moneyflow скрізь **`proxy_pass http://127.0.0.1:3010`**.
 
 ---
 
@@ -54,7 +54,7 @@ crontab -e
 
 Передумови: Ubuntu/Debian, nginx. DNS **A**/**AAAA** на IP VPS. Порти **80/443** для certbot: `sudo ufw allow 80,443/tcp` (якщо ufw увімкнено).
 
-**Порт 3000 зайнятий** (наприклад головний сайт **vladdev.pp.ua**): MoneyFlow за замовчуванням піднімаємо на **127.0.0.1:3001** — nginx для піддомену `moneyflow.vladdev.pp.ua` проксує саме туди (див. `deploy/nginx-moneyflow.conf`). Один порт = один процес; зовні все одно **тільки 80/443** через nginx.
+**Порт 3000 зайнятий** (наприклад головний сайт **vladdev.pp.ua**): MoneyFlow за замовчуванням піднімаємо на **127.0.0.1:3010** (окремо від **3000** і **3001**, якщо там уже інші Node) — nginx для піддомену `moneyflow.vladdev.pp.ua` проксує саме туди (див. `deploy/nginx-moneyflow.conf`). Один порт = один процес; зовні все одно **тільки 80/443** через nginx.
 
 ## 1. Папка на сервері
 
@@ -96,7 +96,7 @@ docker compose build
 docker compose up -d
 ```
 
-Додаток ззовні контейнера доступний на **`127.0.0.1:3001`** (у контейнері лишається 3000; див. `docker-compose.yml`).
+Додаток ззовні контейнера доступний на **`127.0.0.1:3010`** (у контейнері лишається 3000; див. `docker-compose.yml`).
 
 ### Варіант B: Node.js без Docker
 
@@ -108,13 +108,13 @@ npm ci
 npm run build
 ```
 
-Запуск у продакшені (лише **localhost**, зовні — nginx). Порт **3001**, щоб не чіпати те, що вже на **3000**:
+Запуск у продакшені (лише **localhost**, зовні — nginx). Порт **3010**, щоб не чіпати **3000** / **3001**:
 
 ```bash
 HOSTNAME=127.0.0.1 npm run start:vps
 ```
 
-Або еквівалент: `HOSTNAME=127.0.0.1 PORT=3001 npm run start` (у `package.json` скрипт `start` без жорсткого `-p`).
+Або еквівалент: `HOSTNAME=127.0.0.1 PORT=3010 npm run start` (у `package.json` скрипт `start` без жорсткого `-p`).
 
 Краще **PM2** або **systemd**:
 
@@ -125,7 +125,7 @@ HOSTNAME=127.0.0.1 pm2 start npm --name moneyflow -- run start:vps
 pm2 save && sudo pm2 startup
 ```
 
-Переконайтеся, що nginx для MoneyFlow вказує на **3001** (`proxy_pass` у `deploy/nginx-moneyflow.conf`).
+Переконайтеся, що nginx для MoneyFlow вказує на **3010** (`proxy_pass` у `deploy/nginx-moneyflow.conf`).
 
 ## 4. Nginx + HTTPS
 

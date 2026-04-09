@@ -1,5 +1,5 @@
 /**
- * PM2: продакшен Next.js на 127.0.0.1:3001 (не конфліктує з іншим сервісом на :3000).
+ * PM2: продакшен Next.js на 127.0.0.1:3010 (окремий порт, щоб не зіткнутися з :3000 / :3001).
  * Запуск: npx pm2 start ecosystem.config.cjs
  */
 const path = require("path");
@@ -12,7 +12,7 @@ module.exports = {
       name: "moneyflow",
       cwd: root,
       script: path.join(root, "node_modules", "next", "dist", "bin", "next"),
-      args: "start -p 3001 -H 127.0.0.1",
+      args: "start -p 3010 -H 127.0.0.1",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,

@@ -88,7 +88,7 @@ do_install() {
 
   echo ""
   echo ">>> Локальна перевірка (очікуй 200):"
-  curl -sS -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:3001/ || true
+  curl -sS -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:3010/ || true
   echo ""
   echo ">>> Автозапуск PM2 після reboot (один раз на сервері):"
   echo "    pm2 startup"

@@ -6,7 +6,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "start:vps": "next start -p 3001 -H 127.0.0.1",
+    "start:vps": "next start -p 3010 -H 127.0.0.1",
     "deploy:vps": "bash deploy/vps-npm.sh",
     "lint": "next lint"
   },

@@ -2,14 +2,14 @@
 
 ## Причина
 
-У nginx **два** блоки `server` з однаковим `server_name moneyflow.vladdev.pp.ua`. Працює **перший** завантажений; другий **ігнорується** (`conflicting server name … ignored`). Certbot часто дописує SSL у файл **`portfolioweb`**, де для moneyflow може стояти **`proxy_pass` на порт портфоліо** (наприклад 3000), а не **3001**.
+У nginx **два** блоки `server` з однаковим `server_name moneyflow.vladdev.pp.ua`. Працює **перший** завантажений; другий **ігнорується** (`conflicting server name … ignored`). Certbot часто дописує SSL у файл **`portfolioweb`**, де для moneyflow може стояти **`proxy_pass` на порт портфоліо** (наприклад 3000), а не **3010**.
 
-MoneyFlow у PM2 має бути на **`127.0.0.1:3001`**.
+MoneyFlow у PM2 має бути на **`127.0.0.1:3010`**.
 
 ## Перевірка з VPS
 
 ```bash
-curl -sS http://127.0.0.1:3001/ | head -5
+curl -sS http://127.0.0.1:3010/ | head -5
 ```
 
 Має бути HTML від Next (MoneyFlow). Якщо так — бекенд ок, ламає **nginx**.
@@ -35,7 +35,7 @@ sudo nano /etc/nginx/sites-enabled/portfolioweb
 У **`location /`** має бути:
 
 ```nginx
-proxy_pass http://127.0.0.1:3001;
+proxy_pass http://127.0.0.1:3010;
 ```
 
 (не порт портфоліо / головного сайту).
