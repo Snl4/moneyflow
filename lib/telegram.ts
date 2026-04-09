@@ -124,6 +124,7 @@ export type ThemeParams = {
   button_color?: string;
   button_text_color?: string;
   secondary_bg_color?: string;
+  accent_text_color?: string;
 };
 
 export function getThemeParams(): ThemeParams {

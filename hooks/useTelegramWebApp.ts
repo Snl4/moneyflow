@@ -5,16 +5,51 @@ import {
   initTelegramWebApp,
   getTelegramUser,
   getThemeParams,
-  getColorScheme,
   getWebApp,
+  isTelegramMiniApp,
 } from "@/lib/telegram";
 import type { User } from "@/types";
 import { useFinanceStore } from "@/store/useFinanceStore";
 
+const TG_VARS = [
+  "--tg-theme-button-color",
+  "--tg-theme-button-text-color",
+  "--tg-theme-link-color",
+  "--tg-theme-accent-text-color",
+] as const;
+
+function applyTelegramAccentColors(): void {
+  if (!isTelegramMiniApp()) return;
+  const p = getThemeParams();
+  const root = document.documentElement;
+  const hx = (c?: string) =>
+    c ? (c.startsWith("#") ? c : `#${c}`) : undefined;
+  if (p.button_color)
+    root.style.setProperty("--tg-theme-button-color", hx(p.button_color)!);
+  if (p.button_text_color)
+    root.style.setProperty(
+      "--tg-theme-button-text-color",
+      hx(p.button_text_color)!
+    );
+  if (p.link_color)
+    root.style.setProperty("--tg-theme-link-color", hx(p.link_color)!);
+  if (p.accent_text_color)
+    root.style.setProperty(
+      "--tg-theme-accent-text-color",
+      hx(p.accent_text_color)!
+    );
+}
+
+function clearTelegramAccentOverrides(): void {
+  const root = document.documentElement;
+  for (const k of TG_VARS) {
+    root.style.removeProperty(k);
+  }
+}
+
 export function useTelegramWebApp() {
   const [ready, setReady] = useState(false);
   const setUserFromTelegram = useFinanceStore((s) => s.setUserFromTelegram);
-  const updateSettings = useFinanceStore((s) => s.updateSettings);
   const themeSetting = useFinanceStore((s) => s.settings.theme);
 
   const tgUser = useMemo(() => getTelegramUser(), []);
@@ -37,44 +72,26 @@ export function useTelegramWebApp() {
   }, [tgUser, setUserFromTelegram]);
 
   useEffect(() => {
-    if (themeSetting !== "telegram") return;
-    const scheme = getColorScheme();
-    document.documentElement.classList.toggle("dark", scheme === "dark");
-    const p = getThemeParams();
-    const root = document.documentElement;
-    const hx = (c?: string) =>
-      c ? (c.startsWith("#") ? c : `#${c}`) : undefined;
-    if (p.bg_color) root.style.setProperty("--tg-theme-bg-color", hx(p.bg_color)!);
-    if (p.text_color) root.style.setProperty("--tg-theme-text-color", hx(p.text_color)!);
-    if (p.hint_color) root.style.setProperty("--tg-theme-hint-color", hx(p.hint_color)!);
-    if (p.link_color) root.style.setProperty("--tg-theme-link-color", hx(p.link_color)!);
-    if (p.button_color) root.style.setProperty("--tg-theme-button-color", hx(p.button_color)!);
-    if (p.button_text_color)
-      root.style.setProperty("--tg-theme-button-text-color", hx(p.button_text_color)!);
-    if (p.secondary_bg_color)
-      root.style.setProperty("--tg-theme-secondary-bg-color", hx(p.secondary_bg_color)!);
-  }, [themeSetting, ready]);
-
-  useEffect(() => {
-    if (themeSetting === "light") {
-      document.documentElement.classList.remove("dark");
-      return;
-    }
-    if (themeSetting === "dark") {
-      document.documentElement.classList.add("dark");
-      return;
-    }
-    const scheme = getColorScheme();
-    document.documentElement.classList.toggle("dark", scheme === "dark");
+    document.documentElement.classList.toggle("dark", themeSetting === "dark");
   }, [themeSetting]);
 
   useEffect(() => {
+    if (!ready) return;
+    if (isTelegramMiniApp()) {
+      applyTelegramAccentColors();
+      return () => {
+        clearTelegramAccentOverrides();
+      };
+    }
+    clearTelegramAccentOverrides();
+    return;
+  }, [themeSetting, ready]);
+
+  useEffect(() => {
     const W = getWebApp();
-    if (!W) return;
+    if (!W || !isTelegramMiniApp()) return;
     const handler = () => {
-      if (themeSetting !== "telegram") return;
-      const scheme = W.colorScheme;
-      document.documentElement.classList.toggle("dark", scheme === "dark");
+      applyTelegramAccentColors();
     };
     try {
       W.onEvent("themeChanged", handler);
@@ -84,7 +101,7 @@ export function useTelegramWebApp() {
     } catch {
       return;
     }
-  }, [themeSetting]);
+  }, [ready]);
 
   return { ready, webApp: getWebApp() };
 }

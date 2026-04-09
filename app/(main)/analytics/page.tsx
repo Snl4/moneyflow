@@ -3,7 +3,11 @@
 import { useMemo } from "react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card } from "@/components/ui/Card";
-import { IncomeExpenseChart, CategoryPie } from "@/components/charts/AnalyticsCharts";
+import {
+  IncomeExpenseChart,
+  CategoryPie,
+  CategoryBarChart,
+} from "@/components/charts/AnalyticsCharts";
 import { useFinanceStore, selectMonthStats } from "@/store/useFinanceStore";
 import { formatMoney } from "@/lib/format";
 import {
@@ -56,6 +60,13 @@ export default function AnalyticsPage() {
 
   const topCat = pieData[0];
 
+  const hasAnyMovement = useMemo(
+    () => series.some((d) => d.income > 0 || d.expense > 0),
+    [series]
+  );
+
+  const hasExpenseBreakdown = pieData.length > 0;
+
   return (
     <div className="flex flex-col gap-5 animate-fade-in pb-4">
       <AppHeader title="Аналітика" subtitle="За поточний місяць" />
@@ -63,13 +74,13 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">
           <p className="text-xs font-medium text-tg-hint">Дохід</p>
-          <p className="mt-1 text-lg font-bold tabular-nums text-emerald-600">
+          <p className="mt-1 text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
             {formatMoney(stats.income, currency)}
           </p>
         </Card>
         <Card className="p-4">
           <p className="text-xs font-medium text-tg-hint">Витрати</p>
-          <p className="mt-1 text-lg font-bold tabular-nums text-red-500">
+          <p className="mt-1 text-lg font-bold tabular-nums text-red-500 dark:text-red-400">
             {formatMoney(stats.expense, currency)}
           </p>
         </Card>
@@ -80,7 +91,11 @@ export default function AnalyticsPage() {
           Динаміка доходів і витрат
         </h2>
         <p className="mb-4 text-xs text-tg-hint">По днях у межах місяця</p>
-        <IncomeExpenseChart data={series} currency={currency} />
+        <IncomeExpenseChart
+          data={series}
+          currency={currency}
+          hasAnyMovement={hasAnyMovement}
+        />
       </Card>
 
       <Card>
@@ -88,13 +103,23 @@ export default function AnalyticsPage() {
           Витрати за категоріями
         </h2>
         <p className="mb-2 text-xs text-tg-hint">Кругова діаграма</p>
-        {pieData.length === 0 ? (
-          <p className="py-8 text-center text-sm text-tg-hint">
-            Немає витрат за цей місяць
-          </p>
-        ) : (
-          <CategoryPie data={pieData} currency={currency} />
-        )}
+        <CategoryPie
+          data={pieData}
+          currency={currency}
+          hasData={hasExpenseBreakdown}
+        />
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-base font-semibold text-tg-text">
+          Порівняння категорій
+        </h2>
+        <p className="mb-2 text-xs text-tg-hint">Горизонтальні стовпчики</p>
+        <CategoryBarChart
+          data={pieData}
+          currency={currency}
+          hasData={hasExpenseBreakdown}
+        />
       </Card>
 
       <Card>
@@ -125,7 +150,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-tg-hint">Немає даних</p>
+          <p className="text-sm text-tg-hint">Поки немає витрат за місяць</p>
         )}
       </Card>
 
@@ -134,20 +159,24 @@ export default function AnalyticsPage() {
           Статистика по категоріях
         </h2>
         <div className="flex flex-col gap-3">
-          {pieData.map((row) => (
-            <div key={row.categoryId} className="flex items-center gap-3">
-              <span
-                className="h-2 w-2 shrink-0 rounded-full"
-                style={{ backgroundColor: row.color }}
-              />
-              <span className="flex-1 truncate text-sm text-tg-text">
-                {row.name}
-              </span>
-              <span className="text-sm font-semibold tabular-nums text-tg-text">
-                {formatMoney(row.value, currency)}
-              </span>
-            </div>
-          ))}
+          {pieData.length === 0 ? (
+            <p className="text-sm text-tg-hint">Немає витрат для відображення</p>
+          ) : (
+            pieData.map((row) => (
+              <div key={row.categoryId} className="flex items-center gap-3">
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: row.color }}
+                />
+                <span className="flex-1 truncate text-sm text-tg-text">
+                  {row.name}
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-tg-text">
+                  {formatMoney(row.value, currency)}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </Card>
 

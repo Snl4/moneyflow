@@ -1,6 +1,6 @@
 export type CurrencyCode = "UAH" | "USD" | "EUR";
 
-export type ThemeMode = "light" | "dark" | "telegram";
+export type ThemeMode = "light" | "dark";
 
 export type TransactionType = "income" | "expense";
 
@@ -63,8 +63,6 @@ export interface AppSettings {
   currency: CurrencyCode;
   theme: ThemeMode;
   hasSeenWelcome: boolean;
-  /** Якщо true — автодемо вже підвантажували; порожній стан після очищення не заповнюється знову */
-  demoAutoLoaded: boolean;
 }
 
 export interface FinanceState {

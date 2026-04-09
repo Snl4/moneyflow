@@ -22,9 +22,6 @@ export default function SettingsPage() {
   const categories = useFinanceStore((s) => s.categories);
   const addCategory = useFinanceStore((s) => s.addCategory);
   const removeCategory = useFinanceStore((s) => s.removeCategory);
-  const exportData = useFinanceStore((s) => s.exportData);
-  const clearAllData = useFinanceStore((s) => s.clearAllData);
-  const loadDemoData = useFinanceStore((s) => s.loadDemoData);
   const showToast = useToastStore((s) => s.show);
 
   const [catOpen, setCatOpen] = useState(false);
@@ -33,21 +30,9 @@ export default function SettingsPage() {
   const [catColor, setCatColor] = useState("#0d9488");
 
   const themeOptions: { id: ThemeMode; label: string }[] = [
-    { id: "telegram", label: "Як у Telegram" },
     { id: "light", label: "Світла" },
     { id: "dark", label: "Темна" },
   ];
-
-  const exportJson = () => {
-    const blob = new Blob([exportData()], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `moneyflow-export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Експорт готовий", "success");
-  };
 
   const saveCustomCategory = () => {
     if (!catName.trim()) return;
@@ -65,7 +50,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-5 animate-fade-in pb-8">
-      <AppHeader title="Налаштування" subtitle="Профіль і дані" />
+      <AppHeader title="Налаштування" subtitle="Профіль і застосунок" />
 
       <Card>
         <h2 className="mb-3 text-base font-semibold text-tg-text">
@@ -73,8 +58,14 @@ export default function SettingsPage() {
         </h2>
         <p className="text-sm text-tg-hint">
           {isTelegramMiniApp()
-            ? "Міні-застосунок відкрито в Telegram. Дані користувача підтягуються з WebApp."
+            ? "Міні-застосунок у Telegram: кнопки та акценти підлаштовуються під тему клієнта."
             : "Локальний перегляд: відкрийте через бота, щоб отримати аватар та ім’я."}
+        </p>
+        <p className="mt-3 rounded-xl bg-tg-secondary px-3 py-2 text-xs leading-relaxed text-tg-hint">
+          Операції, цілі та бюджети зберігаються автоматично на{" "}
+          <strong className="text-tg-text">цьому пристрої</strong> (пам&apos;ять браузера
+          або Telegram). Після очищення кешу або на іншому телефоні дані будуть окремі — без
+          сервера спільного доступу немає.
         </p>
         {user?.telegramId ? (
           <p className="mt-2 text-xs text-tg-hint">ID: {user.telegramId}</p>
@@ -119,9 +110,6 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-tg-hint">
-          У режимі «Як у Telegram» кольори синхронізуються з themeParams.
-        </p>
       </Card>
 
       <Card>
@@ -166,27 +154,6 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
-      </Card>
-
-      <Card className="flex flex-col gap-3">
-        <h2 className="text-base font-semibold text-tg-text">Дані</h2>
-        <Button variant="secondary" onClick={exportJson}>
-          Експорт JSON
-        </Button>
-        <Button variant="secondary" onClick={() => loadDemoData()}>
-          Завантажити демо-дані
-        </Button>
-        <Button
-          variant="danger"
-          onClick={() => {
-            if (typeof window !== "undefined" && window.confirm("Очистити всі дані?")) {
-              clearAllData();
-              showToast("Дані очищено", "warning");
-            }
-          }}
-        >
-          Очистити всі дані
-        </Button>
       </Card>
 
       <BottomSheet open={catOpen} onClose={() => setCatOpen(false)} title="Нова категорія">

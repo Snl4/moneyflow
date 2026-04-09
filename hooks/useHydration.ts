@@ -9,15 +9,6 @@ export function useHydration() {
 
   useEffect(() => {
     const finish = () => {
-      const s = useFinanceStore.getState();
-      if (
-        !s.settings.demoAutoLoaded &&
-        s.transactions.length === 0 &&
-        s.goals.length === 0 &&
-        s.budgets.length === 0
-      ) {
-        s.loadDemoData();
-      }
       useFinanceStore.setState({ _hasHydrated: true });
       setOk(true);
     };

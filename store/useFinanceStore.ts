@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createLocalPersistStorage } from "@/lib/persistStorage";
 import {
   startOfMonth,
   endOfMonth,
@@ -18,13 +19,13 @@ import type {
   TransactionType,
 } from "@/types";
 import { createDefaultCategories } from "@/data/defaultCategories";
-import { mockTransactions, mockGoals, mockBudgets } from "@/data/mockData";
+
+const STORE_VERSION = 2;
 
 const defaultSettings: AppSettings = {
   currency: "UAH",
-  theme: "telegram",
+  theme: "light",
   hasSeenWelcome: false,
-  demoAutoLoaded: false,
 };
 
 function nowIso() {
@@ -58,10 +59,6 @@ interface FinanceStore {
   addGoal: (g: Omit<Goal, "id" | "createdAt">) => void;
   updateGoal: (id: string, patch: Partial<Goal>) => void;
   removeGoal: (id: string) => void;
-
-  loadDemoData: () => void;
-  exportData: () => string;
-  clearAllData: () => void;
 }
 
 const emptyUser = (): User | null => null;
@@ -75,6 +72,30 @@ const initialState = {
   settings: { ...defaultSettings },
   _hasHydrated: false,
 };
+
+type PersistShape = Pick<
+  FinanceStore,
+  "transactions" | "categories" | "budgets" | "goals" | "user" | "settings"
+>;
+
+function migratePersisted(state: unknown, version: number): unknown {
+  if (version >= STORE_VERSION) return state;
+  const s = state as {
+    settings?: {
+      theme?: string;
+      demoAutoLoaded?: boolean;
+      currency?: AppSettings["currency"];
+      hasSeenWelcome?: boolean;
+    };
+  };
+  if (s?.settings) {
+    const t = s.settings.theme;
+    s.settings.theme =
+      t === "dark" ? "dark" : "light";
+    delete (s.settings as { demoAutoLoaded?: boolean }).demoAutoLoaded;
+  }
+  return state;
+}
 
 export const useFinanceStore = create<FinanceStore>()(
   persist(
@@ -203,47 +224,13 @@ export const useFinanceStore = create<FinanceStore>()(
         set((s) => ({
           goals: s.goals.filter((g) => g.id !== id),
         })),
-
-      loadDemoData: () =>
-        set((s) => ({
-          transactions: mockTransactions.map((t) => ({ ...t })),
-          goals: mockGoals.map((g) => ({ ...g })),
-          budgets: mockBudgets.map((b) => ({ ...b })),
-          settings: { ...s.settings, demoAutoLoaded: true },
-        })),
-
-      exportData: () => {
-        const s = get();
-        return JSON.stringify(
-          {
-            exportedAt: nowIso(),
-            transactions: s.transactions,
-            categories: s.categories,
-            budgets: s.budgets,
-            goals: s.goals,
-            settings: s.settings,
-          },
-          null,
-          2
-        );
-      },
-
-      clearAllData: () =>
-        set({
-          ...initialState,
-          categories: createDefaultCategories(),
-          settings: {
-            ...defaultSettings,
-            hasSeenWelcome: true,
-            demoAutoLoaded: true,
-          },
-          _hasHydrated: true,
-        }),
     }),
     {
       name: "moneyflow-finance-v1",
-      storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({
+      version: STORE_VERSION,
+      migrate: migratePersisted,
+      storage: createJSONStorage(createLocalPersistStorage),
+      partialize: (s): PersistShape => ({
         transactions: s.transactions,
         categories: s.categories,
         budgets: s.budgets,

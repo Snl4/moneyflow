@@ -2,31 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Світла тема: білий фон */
 :root {
-  --tg-theme-bg-color: #f8fafc;
-  --tg-theme-secondary-bg-color: #f1f5f9;
-  --tg-theme-text-color: #0f172a;
-  --tg-theme-hint-color: #64748b;
+  --tg-theme-bg-color: #ffffff;
+  --tg-theme-secondary-bg-color: #f4f4f5;
+  --tg-theme-text-color: #0a0a0a;
+  --tg-theme-hint-color: #71717a;
   --tg-theme-link-color: #0d9488;
   --tg-theme-button-color: #0d9488;
   --tg-theme-button-text-color: #ffffff;
   --tg-theme-accent-text-color: #0d9488;
   --surface-rgb: 255 255 255;
-  --surface-elevated-rgb: 255 255 255;
+  --surface-elevated-rgb: 250 250 250;
   --accent-rgb: 13 148 136;
   --accent-muted-rgb: 45 212 191;
 }
 
+/* Темна тема: майже чорний */
 .dark {
-  --tg-theme-bg-color: #0b1220;
-  --tg-theme-secondary-bg-color: #111827;
-  --tg-theme-text-color: #f1f5f9;
-  --tg-theme-hint-color: #94a3b8;
+  --tg-theme-bg-color: #0a0a0a;
+  --tg-theme-secondary-bg-color: #18181b;
+  --tg-theme-text-color: #fafafa;
+  --tg-theme-hint-color: #a1a1aa;
   --tg-theme-link-color: #2dd4bf;
   --tg-theme-button-color: #14b8a6;
   --tg-theme-button-text-color: #042f2e;
-  --surface-rgb: 17 24 39;
-  --surface-elevated-rgb: 24 33 55;
+  --tg-theme-accent-text-color: #5eead4;
+  --surface-rgb: 9 9 11;
+  --surface-elevated-rgb: 24 24 27;
   --accent-rgb: 20 184 166;
   --accent-muted-rgb: 45 212 191;
 }
