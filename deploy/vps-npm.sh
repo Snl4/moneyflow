@@ -12,6 +12,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Глобальний `pm2` (6.x) має пріоритет над `npx pm2` з node_modules (інакше — розбіжність з демоном).
+run_pm2() {
+  if command -v pm2 >/dev/null 2>&1; then
+    command pm2 "$@"
+  else
+    npx pm2 "$@"
+  fi
+}
+
 WITH_NGINX=false
 ACTION="install"
 
@@ -71,19 +80,19 @@ do_install() {
   npm run build
 
   echo ">>> PM2"
-  if npx pm2 describe moneyflow >/dev/null 2>&1; then
-    npx pm2 delete moneyflow || true
+  if run_pm2 describe moneyflow >/dev/null 2>&1; then
+    run_pm2 delete moneyflow || true
   fi
-  npx pm2 start "$ROOT/ecosystem.config.cjs"
-  npx pm2 save
+  run_pm2 start "$ROOT/ecosystem.config.cjs"
+  run_pm2 save
 
   echo ""
   echo ">>> Локальна перевірка (очікуй 200):"
   curl -sS -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:3001/ || true
   echo ""
   echo ">>> Автозапуск PM2 після reboot (один раз на сервері):"
-  echo "    npx pm2 startup"
-  echo "    (виконай згенеровану sudo-команду, потім npx pm2 save)"
+  echo "    pm2 startup"
+  echo "    (виконай згенеровану sudo-команду, потім pm2 save)"
 
   install_nginx
   echo ""
@@ -106,12 +115,12 @@ do_update() {
   npm run build
 
   echo ">>> PM2 restart"
-  if npx pm2 describe moneyflow >/dev/null 2>&1; then
-    npx pm2 restart moneyflow
+  if run_pm2 describe moneyflow >/dev/null 2>&1; then
+    run_pm2 restart moneyflow
   else
-    npx pm2 start "$ROOT/ecosystem.config.cjs"
+    run_pm2 start "$ROOT/ecosystem.config.cjs"
   fi
-  npx pm2 save
+  run_pm2 save
 
   install_nginx
   echo "Оновлення завершено."

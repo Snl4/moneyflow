@@ -40,6 +40,14 @@ crontab -e
 
 Переконайся, що в cron є **`git`** і **`node`/`npm`** у `PATH` (у системному cron інколи потрібно вказати повний шлях до `node` або додати `PATH=...` у початок crontab).
 
+### PM2: «In-memory PM2 is out-of-date» / різні версії
+
+Глобальний демон (`sudo npm i -g pm2`) і **`npx pm2`** з проєкту мали різні версії (5.x vs 6.x). Скрипт **`deploy/vps-npm.sh`** тепер викликає **`pm2` з PATH**, якщо він є (зазвичай глобальний 6.x), інакше — `npx pm2`. Рекомендація на VPS: `sudo npm i -g pm2@latest`, потім **`pm2 save`**. Команди деплою — **`pm2`**, не `npx pm2 save` окремо, якщо вже стоїть глобальний.
+
+### Nginx: `conflicting server name "moneyflow..."`
+
+Якщо certbot прив’язав сертифікат до **`portfolioweb`**, а ти ще додав окремий файл **`moneyflow.vladdev.pp.ua`** — буде **два** `server_name` для одного домену; nginx ігнорує дубль. Залиш **один** варіант: або прибери `server { ... moneyflow... }` з `portfolioweb`, або видали симлінк окремого сайту в `sites-enabled`. Перевірка: `sudo grep -r moneyflow /etc/nginx/`.
+
 ---
 
 **Важливо:** на сервері **не** використовуйте `npm run dev` — це режим розробки (HMR, без продакшен-оптимізацій). Для VPS потрібен **production-збірка**: або **Docker**, або **`npm run build` + `npm run start`** / скрипт вище.
