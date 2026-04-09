@@ -1,6 +1,28 @@
 # Деплой MoneyFlow на VPS (moneyflow.vladdev.pp.ua)
 
-Передумови: Ubuntu/Debian, Docker + Docker Compose, nginx. DNS **A** (або **AAAA**) запис `moneyflow` → IP VPS. У Cloudflare для certbot відкрийте порти на сервері: `sudo ufw allow 80,443/tcp` (якщо ufw увімкнено).
+## Швидкий старт (npm, без Docker)
+
+На VPS після `git clone` у `/var/www/moneyflow`:
+
+```bash
+cd /var/www/moneyflow
+cp .env.example .env
+nano .env   # NEXT_PUBLIC_APP_URL=https://moneyflow.vladdev.pp.ua
+chmod +x deploy/vps-npm.sh
+./deploy/vps-npm.sh           # npm ci, build, PM2 на 127.0.0.1:3001
+# опційно одразу nginx (потрібен sudo):
+./deploy/vps-npm.sh --nginx
+```
+
+Оновлення після `git push`: `./deploy/vps-npm.sh update` (або з `--nginx`). Деталі в коментарях у `deploy/vps-npm.sh`.
+
+---
+
+**Важливо:** на сервері **не** використовуйте `npm run dev` — це режим розробки (HMR, без продакшен-оптимізацій). Для VPS потрібен **production-збірка**: або **Docker**, або **`npm run build` + `npm run start`** / скрипт вище.
+
+Передумови: Ubuntu/Debian, nginx. DNS **A**/**AAAA** на IP VPS. Порти **80/443** для certbot: `sudo ufw allow 80,443/tcp` (якщо ufw увімкнено).
+
+**Порт 3000 зайнятий** (наприклад головний сайт **vladdev.pp.ua**): MoneyFlow за замовчуванням піднімаємо на **127.0.0.1:3001** — nginx для піддомену `moneyflow.vladdev.pp.ua` проксує саме туди (див. `deploy/nginx-moneyflow.conf`). Один порт = один процес; зовні все одно **тільки 80/443** через nginx.
 
 ## 1. Папка на сервері
 
@@ -12,34 +34,66 @@ sudo chown $USER:$USER /var/www/moneyflow
 
 ## 2. Завантажити код
 
-**Рекомендовано:** репозиторій на GitHub/GitLab, на VPS — `git clone` (детально в [GIT.md](GIT.md)).
+**Рекомендовано:** Git — [GIT.md](GIT.md).
 
 ```bash
 cd /var/www/moneyflow
 git clone https://github.com/YOUR_USER/moneyflow.git .
 ```
 
-Альтернатива без Git — `rsync` з ПК:
+Альтернатива — `rsync` з ПК (без `.git`, `node_modules`, `.next`).
 
-```bash
-rsync -avz --exclude node_modules --exclude .git --exclude .next ./ user@YOUR_VPS_IP:/var/www/moneyflow/
-```
+## 3. Запуск застосунку (оберіть один варіант)
 
-## 3. Docker (рекомендовано)
-
-На VPS:
+Спочатку `.env` (один раз):
 
 ```bash
 cd /var/www/moneyflow
 cp .env.example .env
-# Відредагуйте .env — головне NEXT_PUBLIC_APP_URL
-echo 'NEXT_PUBLIC_APP_URL=https://moneyflow.vladdev.pp.ua' >> .env
+nano .env   # NEXT_PUBLIC_APP_URL=https://moneyflow.vladdev.pp.ua
+```
 
+`NEXT_PUBLIC_*` потрапляють у клієнтський білд — після зміни URL **перезберіть** проєкт.
+
+### Варіант A: Docker (зручно для ізоляції та однакового середовища)
+
+Потрібні Docker + Docker Compose.
+
+```bash
 docker compose build
 docker compose up -d
 ```
 
-Контейнер слухає лише `127.0.0.1:3000` (див. `docker-compose.yml`).
+Додаток ззовні контейнера доступний на **`127.0.0.1:3001`** (у контейнері лишається 3000; див. `docker-compose.yml`).
+
+### Варіант B: Node.js без Docker
+
+Потрібен **Node.js 20+** (LTS).
+
+```bash
+cd /var/www/moneyflow
+npm ci
+npm run build
+```
+
+Запуск у продакшені (лише **localhost**, зовні — nginx). Порт **3001**, щоб не чіпати те, що вже на **3000**:
+
+```bash
+HOSTNAME=127.0.0.1 npm run start:vps
+```
+
+Або еквівалент: `HOSTNAME=127.0.0.1 PORT=3001 npm run start` (у `package.json` скрипт `start` без жорсткого `-p`).
+
+Краще **PM2** або **systemd**:
+
+```bash
+sudo npm i -g pm2
+cd /var/www/moneyflow
+HOSTNAME=127.0.0.1 pm2 start npm --name moneyflow -- run start:vps
+pm2 save && sudo pm2 startup
+```
+
+Переконайтеся, що nginx для MoneyFlow вказує на **3001** (`proxy_pass` у `deploy/nginx-moneyflow.conf`).
 
 ## 4. Nginx + HTTPS
 
@@ -56,25 +110,33 @@ sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d moneyflow.vladdev.pp.ua
 ```
 
-У Cloudflare для origin: **SSL/TLS → Full (strict)** (після успішного certbot).
-
-Якщо тимчасово без HTTPS: у BotFather можна вказати `http://...` лише для тесту; для Mini App краще **HTTPS**.
+У Cloudflare: **SSL/TLS → Full (strict)** після certbot.
 
 ## 5. Telegram Bot
 
-1. Відкрийте [@BotFather](https://t.me/BotFather) → ваш бот → **Bot Settings** → **Menu Button** / **Configure Mini App**.
+1. [@BotFather](https://t.me/BotFather) → **Menu Button** / **Mini App**.
 2. URL: `https://moneyflow.vladdev.pp.ua`
-3. Або кнопка з `web_app`: `{ "url": "https://moneyflow.vladdev.pp.ua" }`
 
 ## Оновлення після змін у коді
-
-Після `git push` на VPS:
 
 ```bash
 cd /var/www/moneyflow
 git pull
+```
+
+**Docker:**
+
+```bash
 docker compose build
 docker compose up -d
 ```
 
-Див. також [GIT.md](GIT.md).
+**Без Docker:**
+
+```bash
+./deploy/vps-npm.sh update
+```
+
+або вручну: `npm ci`, `npm run build`, `npx pm2 restart moneyflow`.
+
+Див. [GIT.md](GIT.md).

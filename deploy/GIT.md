@@ -33,11 +33,9 @@ cd moneyflow
 git clone https://github.com/YOUR_USER/moneyflow.git .
 cp .env.example .env
 nano .env   # NEXT_PUBLIC_APP_URL=https://moneyflow.vladdev.pp.ua
-docker compose build
-docker compose up -d
 ```
 
-Далі nginx/certbot — як у [VPS.md](VPS.md).
+Далі без Docker (рекомендовано один скрипт): див. «Швидкий старт» у [VPS.md](VPS.md) — `./deploy/vps-npm.sh` (опційно `--nginx`). Альтернатива: Docker — той самий [VPS.md](VPS.md).
 
 ## 3. Оновлення після змін
 
@@ -48,11 +46,10 @@ docker compose up -d
 ```bash
 cd /var/www/moneyflow
 git pull
-docker compose build
-docker compose up -d
+./deploy/vps-npm.sh update
 ```
 
-Якщо змінили лише залежності або Dockerfile — інколи потрібно `docker compose build --no-cache`.
+Або Docker: `docker compose build && docker compose up -d` ([VPS.md](VPS.md)).
 
 ## Приватний репозиторій на VPS
 
