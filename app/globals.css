@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-theme-bg-color: #f8fafc;
+  --tg-theme-secondary-bg-color: #f1f5f9;
+  --tg-theme-text-color: #0f172a;
+  --tg-theme-hint-color: #64748b;
+  --tg-theme-link-color: #0d9488;
+  --tg-theme-button-color: #0d9488;
+  --tg-theme-button-text-color: #ffffff;
+  --tg-theme-accent-text-color: #0d9488;
+  --surface-rgb: 255 255 255;
+  --surface-elevated-rgb: 255 255 255;
+  --accent-rgb: 13 148 136;
+  --accent-muted-rgb: 45 212 191;
+}
+
+.dark {
+  --tg-theme-bg-color: #0b1220;
+  --tg-theme-secondary-bg-color: #111827;
+  --tg-theme-text-color: #f1f5f9;
+  --tg-theme-hint-color: #94a3b8;
+  --tg-theme-link-color: #2dd4bf;
+  --tg-theme-button-color: #14b8a6;
+  --tg-theme-button-text-color: #042f2e;
+  --surface-rgb: 17 24 39;
+  --surface-elevated-rgb: 24 33 55;
+  --accent-rgb: 20 184 166;
+  --accent-muted-rgb: 45 212 191;
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: var(--tg-theme-bg-color);
+  color: var(--tg-theme-text-color);
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
